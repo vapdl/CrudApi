@@ -1,0 +1,49 @@
+version: '3.4'
+
+services:
+  web:
+    build:
+      context: devOps/docker/web
+      target: devel
+    image: panamedialottery/imagesmanager-web:devel
+    volumes:
+      - ".:/var/www"
+    depends_on:
+      - php
+    networks:
+      default:
+        ipv4_address: ${EM_DOCKER_WEB_IP}
+
+  php:
+    build:
+      context: devOps/docker/php
+      target: devel
+    image: panamedialottery/imagesmanager-php:devel
+    volumes:
+      - ".:/var/www"
+    networks:
+      - default
+    environment:
+      XDEBUG_CONFIG: remote_host=172.6.0.1 remote_enable=1 remote_autostart=1 remote_log=/tmp/xdebug.log
+
+  db:
+    image: mysql:5.7.24
+    ports:
+      - "3306:3306"
+    networks:
+      default:
+        ipv4_address: ${EM_DOCKER_DATABASE_IP}
+    environment:
+      MYSQL_ROOT_PASSWORD: 123456
+      MYSQL_USER: flagApi
+      MYSQL_PASSWORD: 123456
+      MYSQL_DATABASE: flagApi
+    volumes:
+      - ./devOps/docker/db:/var/lib/mysql
+
+networks:
+  default:
+    ipam:
+      config:
+      - subnet: ${EM_DOCKER_BACKEND_SUBNET}
+
